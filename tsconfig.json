@@ -11,6 +11,7 @@
     "resolveJsonModule": true,
     "target": "es2022",
     "strict": true,
+    "sourceMap": true,
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",

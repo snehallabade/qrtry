@@ -29,11 +29,12 @@ export default defineConfig({
       ],
     },
   },
-  optimizeDeps: {
-    include: ["./app/routes/**/*"],
-  },
+  // Remove or fix optimizeDeps.include if needed
+  // optimizeDeps: {
+  //   include: [], // remove or add actual packages only
+  // },
   build: {
-    sourcemap: false,
+    sourcemap: 'hidden',
     target: "ES2022",
     assetsDir: `file-assets`,
     rollupOptions: {
@@ -56,7 +57,6 @@ export default defineConfig({
   },
   plugins: [
     cjsInterop({
-      // List of CJS dependencies that require interop
       dependencies: [
         "react-microsoft-clarity",
         "@markdoc/markdoc",
@@ -64,7 +64,6 @@ export default defineConfig({
       ],
     }),
     devServer(),
-
     remix({
       ignoredRouteFiles: ["**/.*"],
       future: {
@@ -73,7 +72,6 @@ export default defineConfig({
       routes: async (defineRoutes) => {
         return flatRoutes("routes", defineRoutes);
       },
-
       buildEnd: async ({ remixConfig }) => {
         const sentryInstrument = `instrument.server`;
         await esbuild
@@ -85,7 +83,6 @@ export default defineConfig({
             entryPoints: [`./server/${sentryInstrument}.ts`],
             platform: "node",
             format: "esm",
-            // Don't include node_modules in the bundle
             packages: "external",
             bundle: true,
             logLevel: "info",
