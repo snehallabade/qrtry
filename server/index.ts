@@ -67,99 +67,102 @@ export const getLoadContext: HonoServerOptions["getLoadContext"] = (
   } satisfies AppLoadContext;
 };
 
-export const server = await createHonoServer({
-  honoOptions: {
-    getPath: (req) => {
-      const url = new URL(req.url);
-      const host = req.headers.get("host");
+export const server = await (async () => {
+  return createHonoServer({
+    honoOptions: {
+      getPath: (req) => {
+        const url = new URL(req.url);
+        const host = req.headers.get("host");
 
-      if (process.env.URL_SHORTENER && host === process.env.URL_SHORTENER) {
-        return "/" + host + url.pathname;
-      }
+        if (process.env.URL_SHORTENER && host === process.env.URL_SHORTENER) {
+          return "/" + host + url.pathname;
+        }
 
-      return url.pathname;
+        return url.pathname;
+      },
     },
-  },
-  assetsDir: "file-assets",
-  /** Disable default logger as we have our own */
-  defaultLogger: false,
-  getLoadContext,
-  configure: (server) => {
-    // Apply the middleware to all routes
-    server.use(
-      `/${process.env.URL_SHORTENER}/:path*`,
-      urlShortener({
-        excludePaths: ["/file-assets", "/healthcheck", "/static"],
-      })
-    );
+    assetsDir: "file-assets",
+    defaultLogger: false,
+    getLoadContext,
+    configure: (server) => {
+      // Apply the middleware to all routes
+      server.use(
+        `/${process.env.URL_SHORTENER}/:path*`,
+        urlShortener({
+          excludePaths: ["/file-assets", "/healthcheck", "/static"],
+        })
+      );
 
-    /**
-     * Add logger middleware
-     */
-    server.use("*", logger());
+      /**
+       * Add logger middleware
+       */
+      server.use("*", logger());
 
-    /**
-     * Add session middleware
-     */
-    server.use(
-      session({
-        autoCommit: true,
-        createSessionStorage() {
-          const sessionStorage = createSessionStorage();
+      /**
+       * Add session middleware
+       */
+      server.use(
+        session({
+          autoCommit: true,
+          createSessionStorage() {
+            const sessionStorage = createSessionStorage();
 
-          return {
-            ...sessionStorage,
-            // If a user doesn't come back to the app within 30 days, their session will be deleted.
-            async commitSession(session) {
-              return sessionStorage.commitSession(session, {
-                maxAge: 60 * 60 * 24 * 3, // 3 days
-              });
-            },
-          };
-        },
-      })
-    );
+            return {
+              ...sessionStorage,
+              // If a user doesn't come back to the app within 30 days, their session will be deleted.
+              async commitSession(session) {
+                return sessionStorage.commitSession(session, {
+                  maxAge: 60 * 60 * 24 * 3, // 3 days
+                });
+              },
+            };
+          },
+        })
+      );
 
-    /**
-     * Add refresh session middleware
-     *
-     */
-    server.use("*", refreshSession());
+      /**
+       * Add refresh session middleware
+       *
+       */
+      server.use("*", refreshSession());
 
-    /**
-     * Add protected routes middleware
-     *
-     */
-    server.use(
-      "*",
-      protect({
-        onFailRedirectTo: "/login",
-        publicPaths: [
-          "/",
-          "/accept-invite/:path*", // :path* is a wildcard that will match any path after /accept-invite
-          "/forgot-password",
-          "/join",
-          "/login",
-          "/sso-login",
-          "/oauth/callback",
-          "/logout",
-          "/otp",
-          "/resend-otp",
-          "/reset-password",
-          "/send-otp",
-          "/healthcheck",
-          "/api/public-stats",
-          "/api/oss-friends",
-          "/api/stripe-webhook",
-          "/qr",
-          "/qr/:path*",
-          "/qr/:path*/contact-owner",
-          "/qr/:path*/not-logged-in",
-        ],
-      })
-    );
-  },
-});
+      /**
+       * Add protected routes middleware
+       *
+       */
+      server.use(
+        "*",
+        protect({
+          onFailRedirectTo: "/login",
+          publicPaths: [
+            "/",
+            "/accept-invite/:path*", // :path* is a wildcard that will match any path after /accept-invite
+            "/forgot-password",
+            "/join",
+            "/login",
+            "/sso-login",
+            "/oauth/callback",
+            "/logout",
+            "/otp",
+            "/resend-otp",
+            "/reset-password",
+            "/send-otp",
+            "/healthcheck",
+            "/api/public-stats",
+            "/api/oss-friends",
+            "/api/stripe-webhook",
+            "/qr",
+            "/qr/:path*",
+            "/qr/:path*/contact-owner",
+            "/qr/:path*/not-logged-in",
+          ],
+        })
+      );
+    },
+  });
+})();
+
+// Removed the problematic console.log block
 
 /**
  * Declare our loaders and actions context type
