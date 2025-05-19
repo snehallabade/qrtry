@@ -40,3 +40,17 @@ async function handleOTPVerification(request: Request) {
     }, { status: 500 });
   }
 }
+
+
+export const verifyOTP = async (email: string, token: string) => {
+  const { error } = await supabase.auth.verifyOtp({
+    email,
+    token: otp,
+    type: 'email',
+  }).timeout(10000); // Add 10-second timeout
+
+  if (error) {
+    console.error('OTP Verification Error:', error); // Check Vercel logs for this
+    throw new Error('Invalid OTP');
+  }
+};

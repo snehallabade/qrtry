@@ -22,12 +22,16 @@ export type FlashData = { errorMessage: string };
 export function createSessionStorage() {
   return createCookieSessionStorage({
     cookie: {
-      name: "__authSession",
+      name: "_session",
+      domain: process.env.NODE_ENV === "production" ? ".vercel.app" : undefined,
       httpOnly: true,
       path: "/",
       sameSite: "lax",
       secrets: [env.SESSION_SECRET],
       secure: env.NODE_ENV === "production",
-    },
+      domain: env.NODE_ENV === "production" 
+        ? ".vercel.app"
+        : undefined,
+    }
   });
 }
